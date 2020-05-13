@@ -36,7 +36,7 @@ class Wiu(object):
 
     async def main(self, session: CommandSession, bot_game: views.BotGame):
         '''游戏逻辑 主函数'''
-        await session.send("这里是谁是卧底游戏")
+        await session.send(f"这里是{self.name}游戏")
 
 
 mod = Wiu()

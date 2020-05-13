@@ -46,7 +46,7 @@ async def start(session: CommandSession):
         return
     if bot_game.groups[game].get(gid, -1) == -1:
         bot_game.groups[game][gid] = []
-    if bot_game.person[game](0, uid, 0, '', '') not in bot_game.groups[game][gid]:
+    if not bot_game.persons.get(uid) or bot_game.persons[uid][0] != gid:
         await session.send(f'[CQ:at,qq={uid}] 你当前未在此群加入 “{game}” 游戏')
         return
     persons_length = len(bot_game.groups[game][gid])
