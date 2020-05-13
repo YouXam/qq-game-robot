@@ -1,2 +1,3 @@
-# werewolves
-A qq bot for werewolves
+# qq-game-robot
+
+A qq bot for game
