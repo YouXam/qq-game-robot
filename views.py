@@ -43,6 +43,7 @@ class RankPerson(object):
     def __init__(self, uid):
         self.uid = uid  # QQ号
         self.coin = 0  # 金币数量
+        self.charm = 0  # 魅力
         self.won = {"wiu": {}}  # 赢场计数
         self.all = {"wiu": {}}  # 总场计数
         self.if_id_public = False  # 是否公开QQ号
