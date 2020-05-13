@@ -25,7 +25,8 @@ async def join(session: CommandSession):
         return
     if not bot_game.groups[game].get(gid):
         bot_game.groups[game][gid] = []
-    p = bot_game.person[game](len(bot_game.groups[game][gid])+1, uid, gid, name, session.ctx['sender']['nickname'])
+    p = bot_game.person[game](len(bot_game.groups[game][gid])+1,
+                              uid, gid, name, session.ctx['sender']['nickname'])
     bot_game.groups[game][gid].append(p)
     # TODO: 游戏结束删除这一项
     bot_game.persons[uid] = (gid, game, p)
@@ -45,6 +46,9 @@ async def start(session: CommandSession):
         return
     if bot_game.groups[game].get(gid, -1) == -1:
         bot_game.groups[game][gid] = []
+    if bot_game.person[game](0, uid, 0, '', '') not in bot_game.groups[game][gid]:
+        await session.send(f'[CQ:at,qq={uid}] 你当前未在此群加入 “{game}” 游戏')
+        return
     persons_length = len(bot_game.groups[game][gid])
     if persons_length < bot_game.limit[game]:
         await session.send(f'[CQ:at,qq={uid}] 人数不足， 无法开始 “{game}” 游戏')
@@ -86,10 +90,12 @@ async def player_list(session: CommandSession):
         return
     await sendlist(session, game)
 
+
 @on_command('帮助', only_to_me=False)
 async def game_help(session: CommandSession):
     game_list = list(bot_game.games.keys())
-    game_list_str = "\n".join(f"    {i+1}.{game_list[i]}" for i in range(len(game_list)))
+    game_list_str = "\n".join(
+        f"    {i+1}.{game_list[i]}" for i in range(len(game_list)))
     await session.send(f'''帮助
 
 命令列表
@@ -128,5 +134,6 @@ async def sendlist(session: CommandSession, game):
     persons_length = len(bot_game.groups[game][gid])
     if persons_length:
         plist = "玩家列表:\n" + \
-            "\n".join(f"  {i.tid}.{i.name}" for i in bot_game.groups[game][gid])
+            "\n".join(
+                f"  {i.tid}.{i.name}" for i in bot_game.groups[game][gid])
     await session.send(f"“{game}” 游戏\n当前共 {len(bot_game.groups[game][gid])} 人加入\n{plist}")

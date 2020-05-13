@@ -3,6 +3,8 @@ import views
 
 
 class WiuPerson(object):
+    '''谁是卧底 玩家类'''
+
     def __init__(self, tid, uid, gid, name, nickname):
         '''
         Args
@@ -18,15 +20,22 @@ class WiuPerson(object):
         self.gid = gid
         self.name = name
         self.isu = False
+        self.isdie = False
+
+        self.score = 0
+        self.iswin = False
 
 
 class Wiu(object):
+    '''谁是卧底 游戏类'''
+
     def __init__(self):
         self.name = "谁是卧底"
         self.limit = 1
         self.person = WiuPerson
 
     async def main(self, session: CommandSession, bot_game: views.BotGame):
+        '''游戏逻辑 主函数'''
         await session.send("这里是谁是卧底游戏")
 
 
