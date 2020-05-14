@@ -1,4 +1,5 @@
-from nonebot import on_command, CommandSession
+from nonebot import on_command, CommandSession, on_natural_language, NLPSession, IntentCommand
+import asyncio
 import views
 
 import mods.wiu
@@ -54,8 +55,10 @@ async def start(session: CommandSession):
         await session.send(f'[CQ:at,qq={uid}] 人数不足， 无法开始 “{game}” 游戏')
         await sendlist(session, game)
         return
+    msg_queue = asyncio.Queue()
+    bot_game.queue[gid] = msg_queue
     await session.send(f'{game} 开始游戏')
-    await bot_game.games[game](session, bot_game)
+    await bot_game.games[game](session, bot_game, msg_queue)
     await session.send(f'{game} 游戏结束')
 
 
@@ -126,6 +129,16 @@ async def _parser(session: CommandSession):
     session.state[session.current_key] = stripped_arg
 
 
+@on_command('other', only_to_me=False)
+async def other(session: CommandSession):
+    print(session.ctx['message'])
+
+
+@on_natural_language(only_to_me=False)
+async def _(session: NLPSession):
+    return IntentCommand(100, 'other', current_arg=session.msg_text)
+
+
 async def sendlist(session: CommandSession, game):
     _, gid, _ = views.geti(session)
     plist = ''
@@ -137,3 +150,4 @@ async def sendlist(session: CommandSession, game):
             "\n".join(
                 f"  {i.tid}.{i.name}" for i in bot_game.groups[game][gid])
     await session.send(f"“{game}” 游戏\n当前共 {len(bot_game.groups[game][gid])} 人加入\n{plist}")
+

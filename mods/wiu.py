@@ -1,5 +1,6 @@
 from nonebot import CommandSession
 import views
+import asyncio
 
 
 class WiuPerson(object):
@@ -34,7 +35,7 @@ class Wiu(object):
         self.limit = 1
         self.person = WiuPerson
 
-    async def main(self, session: CommandSession, bot_game: views.BotGame):
+    async def main(self, session: CommandSession, bot_game: views.BotGame, msg_queue: asyncio.Queue):
         '''游戏逻辑 主函数'''
         await session.send(f"这里是{self.name}游戏")
 

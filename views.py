@@ -19,12 +19,17 @@ def geti(session: CommandSession):
 
 
 class BotGame(object):
+    '''保存整个游戏游戏框架的类
+
+    应该只实例化一次
+    '''
     def __init__(self):
         self.groups = {}  # 保存玩家列表
         self.persons = {}  # 保存玩家当前游戏信息
         self.limit = {}  # 每个游戏的最小参加人数
         self.games = {}  # 游戏逻辑函数
         self.person = {}  # 每个游戏对应的玩家类
+        self.queue = {}  # 每个群聊对应的消息队列, 可以多个群聊对应一个消息队列
 
     def add(self, module):
         '''加载mod
@@ -40,6 +45,7 @@ class BotGame(object):
 
 
 class RankPerson(object):
+    '''排行榜上保存玩家信息的类'''
     def __init__(self, uid):
         self.uid = uid  # QQ号
         self.coin = 0  # 金币数量
@@ -51,7 +57,7 @@ class RankPerson(object):
     def __eq__(self, other):
         return self.uid == other.uid
 
-    def played_wiu(self, gid, ifwin, coin):
+    def settle(self, game, gid, ifwin, coin):
         if not self.all["wiu"].get(gid):
             self.all["wiu"][gid] = 1
             self.won["wiu"][gid] = 1 if ifwin else 0
