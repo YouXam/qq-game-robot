@@ -11,7 +11,7 @@ bot_game.add(mods.wiu)
 @on_command('加入', only_to_me=False)
 async def join(session: CommandSession):
     if session.ctx['message_type'] != "group":
-        await session.send(f'此命令只在群聊中可用')
+        await session.send('此命令只在群聊中可用')
         return
     uid, gid, name = views.geti(session)
     game = session.get('game', prompt=f"[CQ:at,qq={uid}] 请输入你要加入的游戏:")
@@ -38,7 +38,7 @@ async def join(session: CommandSession):
 @on_command('开始', only_to_me=False)
 async def start(session: CommandSession):
     if session.ctx['message_type'] != "group":
-        await session.send(f'此命令只在群聊中可用')
+        await session.send('此命令只在群聊中可用')
         return
     uid, gid, name = views.geti(session)
     game = session.get('game', prompt=f"[CQ:at,qq={uid}] 请输入你要开始的游戏:")
@@ -51,6 +51,7 @@ async def start(session: CommandSession):
         await session.send(f'[CQ:at,qq={uid}] 你当前未在此群加入 “{game}” 游戏')
         return
     persons_length = len(bot_game.groups[game][gid])
+    # TODO 游戏进行中无法加入
     if persons_length < bot_game.limit[game]:
         await session.send(f'[CQ:at,qq={uid}] 人数不足， 无法开始 “{game}” 游戏')
         await sendlist(session, game)
@@ -58,14 +59,15 @@ async def start(session: CommandSession):
     msg_queue = asyncio.Queue()
     bot_game.queue[gid] = msg_queue
     await session.send(f'{game} 开始游戏')
-    await bot_game.games[game](session, bot_game, msg_queue)
-    await session.send(f'{game} 游戏结束')
+    bot_game.is_start[game][gid] = True
+    asyncio.ensure_future(bot_game.games_func[game](session, bot_game, msg_queue))
+
 
 
 @on_command('退出', only_to_me=False)
 async def exit_game(session: CommandSession):
     if session.ctx['message_type'] != "group":
-        await session.send(f'此命令只在群聊中可用')
+        await session.send('此命令只在群聊中可用')
         return
     uid, gid, name = views.geti(session)
     if not bot_game.persons.get(uid):
@@ -84,7 +86,7 @@ async def exit_game(session: CommandSession):
 @on_command('玩家列表', only_to_me=False)
 async def player_list(session: CommandSession):
     if session.ctx['message_type'] != "group":
-        await session.send(f'此命令只在群聊中可用')
+        await session.send('此命令只在群聊中可用')
         return
     uid, gid, name = views.geti(session)
     game = session.get('game', prompt=f"[CQ:at,qq={uid}] 请输入你要查询的游戏:")
@@ -96,9 +98,8 @@ async def player_list(session: CommandSession):
 
 @on_command('帮助', only_to_me=False)
 async def game_help(session: CommandSession):
-    game_list = list(bot_game.games.keys())
     game_list_str = "\n".join(
-        f"    {i+1}.{game_list[i]}" for i in range(len(game_list)))
+        f"    {i+1}.{bot_game.games[i]}" for i in range(len(bot_game.games)))
     await session.send(f'''帮助
 
 命令列表
@@ -131,7 +132,20 @@ async def _parser(session: CommandSession):
 
 @on_command('other', only_to_me=False)
 async def other(session: CommandSession):
-    print(session.ctx['message'])
+    s = session.ctx["message"].split()
+    uid, _, name = views.geti(session)
+    if bot_game.persons.get(uid):
+        gid, game = bot_game.persons[uid][0:2]
+        if bot_game.on_func[game].get(s[0][1:]):
+            bot_game.on_func[game][s[0][1:]](session, bot_game.queue[gid])
+        else:
+            if session.ctx['message_type'] != "group":
+                bot_game.private_default_func[game](session, bot_game.queue[gid])
+            else:
+                bot_game.group_default_func[game](session, bot_game.queue[gid])
+    elif s[0][0] in {'.', '/', '\\', '!', '！'} and bot_game.games.get(s[0][1:]) and bot_game.on_func[s[0][1:]].get(s[1]):
+        # 如果以命令前缀开头 , 有此游戏, 有此命令
+        bot_game.on_func[s[0][1:]][s[1]](session)
 
 
 @on_natural_language(only_to_me=False)
@@ -140,6 +154,7 @@ async def _(session: NLPSession):
 
 
 async def sendlist(session: CommandSession, game):
+    '''发送当前玩家列表'''
     _, gid, _ = views.geti(session)
     plist = ''
     if bot_game.groups[game].get(gid, -1) == -1:
@@ -150,4 +165,3 @@ async def sendlist(session: CommandSession, game):
             "\n".join(
                 f"  {i.tid}.{i.name}" for i in bot_game.groups[game][gid])
     await session.send(f"“{game}” 游戏\n当前共 {len(bot_game.groups[game][gid])} 人加入\n{plist}")
-

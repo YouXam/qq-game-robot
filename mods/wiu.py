@@ -27,6 +27,9 @@ class WiuPerson(object):
         self.iswin = False
 
 
+cm = views.CustomizeMethod()
+
+
 class Wiu(object):
     '''谁是卧底 游戏类'''
 
@@ -35,9 +38,14 @@ class Wiu(object):
         self.limit = 1
         self.person = WiuPerson
 
+    @cm.on("过")
+    async def pass_speak(self, session: CommandSession, msg_queue: asyncio.Queue):
+        session.send(self.name+" 过")
+
     async def main(self, session: CommandSession, bot_game: views.BotGame, msg_queue: asyncio.Queue):
         '''游戏逻辑 主函数'''
         await session.send(f"这里是{self.name}游戏")
+        await asyncio.sleep(10)
 
 
 mod = Wiu()
